@@ -5,28 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
-        canvas { border: 1px solid black; }
-        #score { font-size: 24px; margin: 10px; }
-        #instructions { margin: 10px; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; }
+        canvas { background: #1d1d1d; }
     </style>
 </head>
 <body>
-    <h1>Pong Game</h1>
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <div id="score">
-        Player 1: <span id="player1Score">0</span> | 
-        Player 2: <span id="player2Score">0</span>
-    </div>
-    <div id="instructions">
-        Instructions: Use W (Player 1) and UP ARROW (Player 2) to move paddles. 
-        First to 5 points wins!
-    </div>
+    <canvas id="pong" width="800" height="400"></canvas>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const context = canvas.getContext('2d');
-        let player1Score = 0, player2Score = 0;
-        // Game logic goes here
+        const canvas = document.getElementById("pong");
+        const ctx = canvas.getContext("2d");
+
+        const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+        let playerPaddle = { x: 0, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: "#fff" };
+        let aiPaddle = { x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: "#fff" };
+        let ball = { x: canvas.width / 2, y: canvas.height / 2, size: ballSize, speed: 4, dx: 4, dy: 4, color: "#fff" };
+
+        function drawRect(x, y, width, height, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        function drawArc(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2, false);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function update() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Collision detection
+            if (ball.y + ball.size > canvas.height || ball.y - ball.size < 0) {
+                ball.dy *= -1;
+            }
+
+            if (ball.x - ball.size < playerPaddle.x + playerPaddle.width && ball.y > playerPaddle.y && ball.y < playerPaddle.y + playerPaddle.height) {
+                ball.dx *= -1;
+            }
+
+            if (ball.x + ball.size > aiPaddle.x && ball.y > aiPaddle.y && ball.y < aiPaddle.y + aiPaddle.height) {
+                ball.dx *= -1;
+            }
+
+            // AI movement
+            aiPaddle.y += ((ball.y - (aiPaddle.y + aiPaddle.height / 2)) * 0.1);
+        }
+
+        function draw() {
+            drawRect(0, 0, canvas.width, canvas.height, "#1d1d1d");
+            drawRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height, playerPaddle.color);
+            drawRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, aiPaddle.color);
+            drawArc(ball.x, ball.y, ball.size, ball.color);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener("mousemove", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            playerPaddle.y = event.clientY - rect.top - playerPaddle.height / 2;
+        });
+
+        gameLoop();
     </script>
 </body>
 </html>
